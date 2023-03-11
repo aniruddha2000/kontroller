@@ -1,0 +1,17 @@
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+C = IN
+ST = WB
+L = Kolkata
+O = Self
+OU = Dev
+CN = www.k8s.com
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = validation-kontroller.default.svc
