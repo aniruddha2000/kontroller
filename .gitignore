@@ -1,0 +1,8 @@
+*.crt
+*.cert
+*.pem
+*.key
+
+bin/
+.idea/
+.vscode/
