@@ -2,7 +2,9 @@
 *.cert
 *.pem
 *.key
+manifests/certs/secret.yaml
 
 bin/
 .idea/
 .vscode/
+dist/

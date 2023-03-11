@@ -2,7 +2,11 @@ module github.com/aniruddha2000/kontroller
 
 go 1.19
 
-require k8s.io/apiserver v0.26.2
+require (
+	github.com/spf13/pflag v1.0.5
+	k8s.io/apiserver v0.26.2
+	k8s.io/component-base v0.26.2
+)
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
@@ -48,7 +52,6 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/cobra v1.6.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.5 // indirect
@@ -85,7 +88,6 @@ require (
 	k8s.io/api v0.26.2 // indirect
 	k8s.io/apimachinery v0.26.2 // indirect
 	k8s.io/client-go v0.26.2 // indirect
-	k8s.io/component-base v0.26.2 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kms v0.26.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
