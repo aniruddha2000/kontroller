@@ -1,11 +1,22 @@
+FILE=VERSION
+USERNAME=aniruddhabasak
+PROJECTNAME=kontroller
+IMAGE=${USERNAME}/${PROJECTNAME}
+TAG=$(shell cat VERSION)
+
 .PHONY: docker
-docker:
-	docker build -t aniruddhabasak/kontroller:latest .
+docker: docker-build
+	docker push ${IMAGE}:${TAG}
+	kubectl create deployment validation-kontroller --image ${IMAGE}:${TAG} --dry-run=client -oyaml > manifests/deploy.yaml
 
-.PHONY: docker-push
-docker-push:
-	docker push aniruddhabasak/kontroller:latest
+.PHONY: docker-build
+docker-build: pre-docker
+	docker build -t ${IMAGE}:${TAG} .
 
+.PHONY: pre-docker
+pre-docker:
+	python3 version.py
+	@TAG=$(shell cat ${FILE})
 
 .PHONY: docker-dev
 docker-dev:
