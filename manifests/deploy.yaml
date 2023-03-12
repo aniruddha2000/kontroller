@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - image: aniruddhabasak/kontroller:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         name: kontroller
         args:
           - --tls-cert-file=/var/run/webhook/serving-cert/tls.crt
