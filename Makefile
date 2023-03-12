@@ -7,7 +7,7 @@ TAG=$(shell cat VERSION)
 .PHONY: docker
 docker: docker-build
 	docker push ${IMAGE}:${TAG}
-	kubectl create deployment validation-kontroller --image ${IMAGE}:${TAG} --dry-run=client -oyaml > manifests/deploy.yaml
+	yq e -i '(.spec.template.spec.containers[] | select(.image) | .image) |= "${IMAGE}:${TAG}"' manifests/deploy.yaml
 
 .PHONY: docker-build
 docker-build: pre-docker
