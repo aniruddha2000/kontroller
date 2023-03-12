@@ -15,7 +15,7 @@ docker-dev:
 ssl:
 	rm -f manifests/certs/secret.yaml manifests/certs/tls.crt manifests/certs/tls.key
 	openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout manifests/certs/tls.key -out manifests/certs/tls.crt -config manifests/certs/tls.cnf -extensions 'v3_req'
-	kubectl create secret generic certs --from-file manifests/certs/tls.crt --from-file manifests/certs/tls.key --dry-run=client -o yaml > manifests/certs/secret.yaml
+	kubectl create secret generic certs --from-file manifests/certs/tls.crt --from-file manifests/certs/tls.key --dry-run=client -o yaml > manifests/secret.yaml
 
 .PHONY: build
 build:

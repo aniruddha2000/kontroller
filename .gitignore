@@ -2,9 +2,10 @@
 *.cert
 *.pem
 *.key
-manifests/certs/secret.yaml
+manifests/secret.yaml
 
 bin/
 .idea/
 .vscode/
 dist/
+apiserver.local.config/
