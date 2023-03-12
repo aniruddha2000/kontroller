@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/aniruddha2000/kontroller/api"
-	"github.com/aniruddha2000/kontroller/api/handlers"
 	"github.com/spf13/pflag"
 	"k8s.io/apiserver/pkg/server"
 	"k8s.io/component-base/cli/globalflag"
@@ -12,23 +11,23 @@ import (
 )
 
 func main() {
-	option := api.NewDefaultOptions()
+	webhookServer := api.NewWebhookServer()
 
 	fs := pflag.NewFlagSet(api.Kon, pflag.ExitOnError)
 	globalflag.AddGlobalFlags(fs, api.Kon)
-	option.AddFlagSet(fs)
+	webhookServer.Opt.AddFlagSet(fs)
 
 	if err := fs.Parse(os.Args); err != nil {
 		panic(err)
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(handlers.KlusterValidationHandler))
+	mux.Handle("/", http.HandlerFunc(webhookServer.Handler.KlusterValidationHandler))
+
+	webhookServer.Cfg = webhookServer.Opt.Config()
 
 	stopCh := server.SetupSignalHandler()
-
-	info := option.Config()
-	ch, _, err := info.SecInfo.Serve(mux, 10*time.Second, stopCh)
+	ch, _, err := webhookServer.Cfg.SecInfo.Serve(mux, 10*time.Second, stopCh)
 	if err != nil {
 		panic(err)
 	}

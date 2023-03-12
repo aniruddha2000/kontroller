@@ -1,6 +1,8 @@
 package api
 
 import (
+	"github.com/aniruddha2000/kontroller/api/handlers"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/options"
@@ -10,6 +12,21 @@ const (
 	// Kon is kontroller global name
 	Kon = "kontroller"
 )
+
+type Server struct {
+	Cfg     *Config
+	Opt     *Options
+	Handler *handlers.Handler
+	Log     *logrus.Logger
+}
+
+func NewWebhookServer() *Server {
+	return &Server{
+		Opt:     NewDefaultOptions(),
+		Handler: handlers.NewHandler(),
+		Log:     logrus.New(),
+	}
+}
 
 // Config defines the server info for custom webhook server.
 type Config struct {
