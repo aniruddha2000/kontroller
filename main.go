@@ -1,14 +1,15 @@
 package main
 
 import (
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/aniruddha2000/kontroller/api"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"k8s.io/apiserver/pkg/server"
 	"k8s.io/component-base/cli/globalflag"
-	"net/http"
-	"os"
-	"time"
 )
 
 func main() {

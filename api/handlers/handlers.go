@@ -1,16 +1,18 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
+	"net/http"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"net/http"
-	"strings"
 )
 
 type Handler struct {
@@ -28,12 +30,11 @@ func (h *Handler) KlusterValidationHandler(w http.ResponseWriter, r *http.Reques
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-
+		log.Errorf("Reading Requests Body: %v", err)
 	}
 
 	gvk := admv1beta1.SchemeGroupVersion.WithKind("AdmissionReview")
 	var admissionReview admv1beta1.AdmissionReview
-
 	_, _, err = h.Codec.UniversalDeserializer().Decode(body, &gvk, &admissionReview)
 	if err != nil {
 		log.Errorf("Error decode: %v, converting requests body to admission review type", err)
@@ -46,7 +47,7 @@ func (h *Handler) KlusterValidationHandler(w http.ResponseWriter, r *http.Reques
 		log.Errorf("Error decode: %v, converting requests body to pod type", err)
 	}
 
-	var response admv1beta1.AdmissionResponse
+	response := admv1beta1.AdmissionResponse{}
 	allow := validatePod(pod.Spec)
 	if !allow {
 		log.Debug("Inside failure")
@@ -55,6 +56,7 @@ func (h *Handler) KlusterValidationHandler(w http.ResponseWriter, r *http.Reques
 			Allowed: allow,
 			Result: &metav1.Status{
 				Message: fmt.Sprintf("Pod image name: %s has latest in it", pod.Spec.Containers[0].Image),
+				Reason:  metav1.StatusReasonInvalid,
 			},
 		}
 	} else {
@@ -64,7 +66,16 @@ func (h *Handler) KlusterValidationHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	log.Debug(response)
+	admissionReview.Response = &response
+	res, err := json.Marshal(admissionReview)
+	if err != nil {
+		log.Errorf("Converting response to byte: %v", err)
+	}
+
+	_, err = w.Write(res)
+	if err != nil {
+		log.Errorf("Writing response to ResponseWritter: %v", err)
+	}
 }
 
 func validatePod(podSpec v1.PodSpec) bool {
