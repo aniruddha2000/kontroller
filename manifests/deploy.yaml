@@ -17,8 +17,9 @@ spec:
       labels:
         app: validation-kontroller
     spec:
+      serviceAccountName: kontroller-sa
       containers:
-        - image: aniruddhabasak/kontroller:0.0.2
+        - image: aniruddhabasak/kontroller:0.0.4
           imagePullPolicy: Always
           name: kontroller
           args:
