@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/aniruddha2000/kontroller/api/handlers"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/options"
@@ -17,14 +17,12 @@ type Server struct {
 	Cfg     *Config
 	Opt     *Options
 	Handler *handlers.Handler
-	Log     *logrus.Logger
 }
 
 func NewWebhookServer() *Server {
 	return &Server{
 		Opt:     NewDefaultOptions(),
 		Handler: handlers.NewHandler(),
-		Log:     logrus.New(),
 	}
 }
 
@@ -58,13 +56,13 @@ func (o *Options) AddFlagSet(fs *pflag.FlagSet) {
 func (o *Options) Config() *Config {
 	err := o.SecOpts.MaybeDefaultWithSelfSignedCerts("0.0.0.0", nil, nil)
 	if err != nil {
-		panic(err)
+		log.Errorf("Self signing cert: %v", err)
 	}
 
 	c := &Config{}
 	err = o.SecOpts.ApplyTo(&c.SecInfo)
 	if err != nil {
-		panic(err)
+		log.Errorf("Apply secure info: %v", err)
 	}
 
 	return c
