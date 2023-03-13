@@ -19,8 +19,8 @@ spec:
     spec:
       serviceAccountName: kontroller-sa
       containers:
-        - image: aniruddhabasak/kontroller:0.0.4
-          imagePullPolicy: Always
+        - image: aniruddhabasak/kontroller:0.0.5
+          imagePullPolicy: IfNotPresent
           name: kontroller
           args:
             - --tls-cert-file=/var/run/webhook/serving-cert/tls.crt
