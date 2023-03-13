@@ -13,12 +13,14 @@ const (
 	Kon = "kontroller"
 )
 
+// Server Defines the attributes for admission webhook server.
 type Server struct {
 	Cfg     *Config
 	Opt     *Options
 	Handler *handlers.Handler
 }
 
+// NewWebhookServer returns a webhook server.
 func NewWebhookServer() *Server {
 	return &Server{
 		Opt:     NewDefaultOptions(),

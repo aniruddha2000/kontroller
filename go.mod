@@ -3,6 +3,7 @@ module github.com/aniruddha2000/kontroller
 go 1.19
 
 require (
+	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.26.2

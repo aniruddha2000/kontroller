@@ -29,7 +29,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(webhookServer.Handler.KlusterValidationHandler))
+	mux.Handle("/validate/pod", http.HandlerFunc(webhookServer.Handler.PodValidationHandler))
+	mux.Handle("/mutate/pod", http.HandlerFunc(webhookServer.Handler.PodMutationHandler))
 
 	webhookServer.Cfg = webhookServer.Opt.Config()
 
