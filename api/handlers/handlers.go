@@ -29,7 +29,9 @@ func NewHandler() *Handler {
 }
 
 func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info("PodValidationHandler is called")
+	log.WithFields(log.Fields{
+		"URL": r.URL.RawPath,
+	}).Info("PodValidationHandler is called")
 
 	pod, admissionReview, err := h.getRequestsObject(w, r)
 	if err != nil {
@@ -38,14 +40,14 @@ func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := admv1beta1.AdmissionResponse{}
-	allow := validatePod(pod.Spec)
+	allow := validatePodObjectMeta(pod.ObjectMeta)
 	if !allow {
 		response = admv1beta1.AdmissionResponse{
 			UID:     admissionReview.Request.UID,
 			Allowed: allow,
 			Result: &metav1.Status{
 				Status:  "Failure",
-				Message: fmt.Sprintf("Pod image name: %s has latest in it", pod.Spec.Containers[0].Image),
+				Message: fmt.Sprintf("Pod metadata: %s has no desired annotation in it %s:%s", pod.ObjectMeta.Annotations, "validated-by", "custom webhook"),
 				Reason:  metav1.StatusReasonInvalid,
 			},
 		}
@@ -70,17 +72,25 @@ func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func validatePod(podSpec v1.PodSpec) bool {
-	for _, container := range podSpec.Containers {
-		if container.ImagePullPolicy == "" {
+func validatePodObjectMeta(objectMeta metav1.ObjectMeta) bool {
+	if objectMeta.Annotations == nil {
+		return false
+	} else {
+		annotation, ok := objectMeta.Annotations["validated-by"]
+		if !ok {
+			return false
+		} else if annotation == "custom webhook" {
+			return true
+		} else {
 			return false
 		}
 	}
-	return true
 }
 
 func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info("PodMutationHandler is called")
+	log.WithFields(log.Fields{
+		"URL": r.URL.RawPath,
+	}).Info("PodMutationHandler is called")
 
 	pod, admissionReview, err := h.getRequestsObject(w, r)
 	if err != nil {
@@ -89,10 +99,12 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newPod := pod.DeepCopy()
-	for _, container := range newPod.Spec.Containers {
-		if container.ImagePullPolicy == "" {
-			container.ImagePullPolicy = v1.PullIfNotPresent
+	allow := validatePodObjectMeta(newPod.ObjectMeta)
+	if !allow {
+		if newPod.ObjectMeta.Annotations == nil {
+			newPod.ObjectMeta.Annotations = make(map[string]string)
 		}
+		newPod.ObjectMeta.Annotations["validated-by"] = "custom webhook"
 	}
 
 	res, err := json.Marshal(newPod)
