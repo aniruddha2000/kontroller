@@ -3,6 +3,7 @@
 *.pem
 *.key
 manifests/secret.yaml
+ngnix.yaml
 
 bin/
 .idea/
