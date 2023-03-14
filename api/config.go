@@ -1,7 +1,10 @@
 package api
 
 import (
+	"os"
+
 	"github.com/aniruddha2000/kontroller/api/handlers"
+	formatter "github.com/antonfisher/nested-logrus-formatter"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"k8s.io/apiserver/pkg/server"
@@ -18,6 +21,7 @@ type Server struct {
 	Cfg     *Config
 	Opt     *Options
 	Handler *handlers.Handler
+	Log     *log.Logger
 }
 
 // NewWebhookServer returns a webhook server.
@@ -25,6 +29,13 @@ func NewWebhookServer() *Server {
 	return &Server{
 		Opt:     NewDefaultOptions(),
 		Handler: handlers.NewHandler(),
+		Log: &log.Logger{
+			Out:   os.Stdout,
+			Level: log.DebugLevel,
+			Formatter: &formatter.Formatter{
+				TimestampFormat: "2006-01-02 15:04:05",
+			},
+		},
 	}
 }
 

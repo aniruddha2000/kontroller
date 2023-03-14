@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/mattbaird/jsonpatch"
-	log "github.com/sirupsen/logrus"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,14 +28,9 @@ func NewHandler() *Handler {
 }
 
 func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
-	log.WithFields(log.Fields{
-		"URL": r.URL.RawPath,
-	}).Info("PodValidationHandler is called")
-
-	pod, admissionReview, err := h.getRequestsObject(w, r)
+	pod, admissionReview, err := h.getPodObjectFromAdmissionReviewRequest(w, r)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Reading Requests Body: %v", err)
 	}
 
 	response := admv1beta1.AdmissionResponse{}
@@ -62,13 +56,11 @@ func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := json.Marshal(admissionReview)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Converting response to byte: %v", err)
 	}
 
 	_, err = w.Write(res)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Writing response to ResponseWritter: %v", err)
 	}
 }
 
@@ -88,14 +80,9 @@ func validatePodObjectMeta(objectMeta metav1.ObjectMeta) bool {
 }
 
 func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
-	log.WithFields(log.Fields{
-		"URL": r.URL.RawPath,
-	}).Info("PodMutationHandler is called")
-
-	pod, admissionReview, err := h.getRequestsObject(w, r)
+	pod, admissionReview, err := h.getPodObjectFromAdmissionReviewRequest(w, r)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Reading Requests Body: %v", err)
 	}
 
 	newPod := pod.DeepCopy()
@@ -110,19 +97,16 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := json.Marshal(newPod)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Converting response to byte: %v", err)
 	}
 
 	patch, err := jsonpatch.CreatePatch(admissionReview.Request.Object.Raw, res)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Creating JSONPatch: %v", err)
 	}
 
 	patchRes, err := json.Marshal(patch)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Converting patch response to byte: %v", err)
 	}
 
 	jsonPatchType := admv1beta1.PatchTypeJSONPatch
@@ -136,17 +120,15 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 	admissionReviewResponse, err := json.Marshal(admissionReview)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Converting admission review response to byte: %v", err)
 	}
 
 	_, err = w.Write(admissionReviewResponse)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
-		log.Errorf("Writing response to ResponseWritter: %v", err)
 	}
 }
 
-func (h *Handler) getRequestsObject(w http.ResponseWriter, r *http.Request) (v1.Pod, admv1beta1.AdmissionReview, error) {
+func (h *Handler) getPodObjectFromAdmissionReviewRequest(w http.ResponseWriter, r *http.Request) (v1.Pod, admv1beta1.AdmissionReview, error) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return v1.Pod{}, admv1beta1.AdmissionReview{}, err
