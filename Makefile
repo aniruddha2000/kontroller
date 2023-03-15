@@ -13,12 +13,14 @@ docker-no-increment:
 	docker build -t ${IMAGE}:${TAG} .
 	docker push ${IMAGE}:${TAG}
 	yq e -i '(.spec.template.spec.containers[] | select(.image) | .image) |= "${IMAGE}:${TAG}"' manifests/deploy.yaml
+	yq e -i '(.spec.template.spec.containers[] | select(.image) | .image) |= "${IMAGE}:${TAG}"' test/e2e/testdata/deploy.yaml
 
 .PHONY: docker
 docker: increment-patch
 	docker build -t ${IMAGE}:${TAG} .
 	docker push ${IMAGE}:${TAG}
 	yq e -i '(.spec.template.spec.containers[] | select(.image) | .image) |= "${IMAGE}:${TAG}"' manifests/deploy.yaml
+	yq e -i '(.spec.template.spec.containers[] | select(.image) | .image) |= "${IMAGE}:${TAG}"' test/e2e/testdata/deploy.yaml
 
 .PHONY: increment-patch
 increment-patch:

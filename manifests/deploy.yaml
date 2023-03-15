@@ -19,7 +19,7 @@ spec:
     spec:
       serviceAccountName: kontroller-sa
       containers:
-        - image: aniruddhabasak/kontroller:0.1.0
+        - image: aniruddhabasak/kontroller:0.1.1
           imagePullPolicy: IfNotPresent
           name: kontroller
           args:

@@ -52,4 +52,12 @@ spec:
     image: afakharany/watcher:latest" > ngnix.yaml | kubectl apply -f ngnix.yaml
 ```
 
-Now describe the pod after creation you will see Annotations is being added. 
+Now describe the pod after creation you will see Annotations is being added.
+
+## Testing
+
+### e2e
+
+```shell
+$ make e2e-test
+```

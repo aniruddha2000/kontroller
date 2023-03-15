@@ -35,7 +35,7 @@ func TestKontroller(t *testing.T) {
 				decoder.CreateHandler(r),
 				decoder.MutateNamespace(namespace))
 			if err != nil {
-				t.Errorf("Failed to decode testdata/: %v", err)
+				t.Errorf("Failed to create testdata/: %v", err)
 				t.Fail()
 			}
 
@@ -43,7 +43,7 @@ func TestKontroller(t *testing.T) {
 				decoder.CreateHandler(r),
 				decoder.MutateNamespace(namespace))
 			if err != nil {
-				t.Errorf("Failed to decode testdata/admission/: %v", err)
+				t.Errorf("Failed to create testdata/admission/: %v", err)
 				t.Fail()
 			}
 
@@ -83,7 +83,7 @@ func TestKontroller(t *testing.T) {
 				decoder.CreateHandler(r),
 				decoder.MutateNamespace(namespace))
 			if err != nil {
-				t.Errorf("Failed to decode: %v", err)
+				t.Errorf("Failed to create testdata/pod/: %v", err)
 				t.Fail()
 			}
 
@@ -117,6 +117,40 @@ func TestKontroller(t *testing.T) {
 			}), wait.WithTimeout(20*time.Second))
 			if err != nil {
 				t.Errorf("Annotations not found: %v", err)
+				t.Fail()
+			}
+
+			return ctx
+		}).
+		WithTeardown("tearing down resources", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
+			r, err := resources.New(c.Client().RESTConfig())
+			if err != nil {
+				t.Errorf("Failed to create resource: %v", err)
+				t.Fail()
+			}
+			r.WithNamespace(namespace)
+
+			err = decoder.DecodeEachFile(ctx, os.DirFS("./testdata"), "*.yaml",
+				decoder.DeleteHandler(r),
+				decoder.MutateNamespace(namespace))
+			if err != nil {
+				t.Errorf("Failed to delete testdata/: %v", err)
+				t.Fail()
+			}
+
+			err = decoder.DecodeEachFile(ctx, os.DirFS("./testdata/admission"), "*.yaml",
+				decoder.DeleteHandler(r),
+				decoder.MutateNamespace(namespace))
+			if err != nil {
+				t.Errorf("Failed to decode testdata/admission: %v", err)
+				t.Fail()
+			}
+
+			err = decoder.DecodeEachFile(ctx, os.DirFS("./testdata/pod"), "*.yaml",
+				decoder.DeleteHandler(r),
+				decoder.MutateNamespace(namespace))
+			if err != nil {
+				t.Errorf("Failed to decode testdata/pod: %v", err)
 				t.Fail()
 			}
 
