@@ -10,4 +10,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kontroller-sa
-  namespace: default
+  namespace: e2e-ns

@@ -15,13 +15,12 @@ import (
 var (
 	testenv         env.Environment
 	kindClusterName string
-	namespace       string
+	namespace       = "e2e-ns"
 )
 
 func TestMain(m *testing.M) {
 	testenv = env.New()
 	kindClusterName = envconf.RandomName("e2e-cluster", 16)
-	namespace = envconf.RandomName("e2e-ns", 16)
 
 	testenv.Setup(
 		envfuncs.CreateKindCluster(kindClusterName),
