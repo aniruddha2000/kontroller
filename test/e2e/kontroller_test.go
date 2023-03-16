@@ -142,7 +142,7 @@ func TestKontroller(t *testing.T) {
 				decoder.DeleteHandler(r),
 				decoder.MutateNamespace(namespace))
 			if err != nil {
-				t.Errorf("Failed to decode testdata/admission: %v", err)
+				t.Errorf("Failed to delete testdata/admission: %v", err)
 				t.Fail()
 			}
 
@@ -150,7 +150,7 @@ func TestKontroller(t *testing.T) {
 				decoder.DeleteHandler(r),
 				decoder.MutateNamespace(namespace))
 			if err != nil {
-				t.Errorf("Failed to decode testdata/pod: %v", err)
+				t.Errorf("Failed to delete testdata/pod: %v", err)
 				t.Fail()
 			}
 
