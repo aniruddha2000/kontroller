@@ -11,6 +11,10 @@ import (
 	"k8s.io/component-base/cli/globalflag"
 )
 
+const (
+	serverShutdownTimeout = 10
+)
+
 func main() {
 	webhookServer := api.NewWebhookServer()
 
@@ -32,7 +36,7 @@ func main() {
 	webhookServer.Cfg = webhookServer.Opt.Config()
 
 	stopCh := server.SetupSignalHandler()
-	ch, _, err := webhookServer.Cfg.SecInfo.Serve(mux, 10*time.Second, stopCh)
+	ch, _, err := webhookServer.Cfg.SecInfo.Serve(mux, serverShutdownTimeout*time.Second, stopCh)
 	if err != nil {
 		webhookServer.Log.Errorf("Error serving webhook: %v", err)
 	}

@@ -40,7 +40,10 @@ linters-settings:
   varnamelen:
     ignore-names:
       - s
+      - c
+      - o
       - w
+      - r
       - id
       - v1
       - tt

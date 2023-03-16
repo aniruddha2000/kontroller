@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	// Kon is kontroller global name
+	// Kon is kontroller global name.
 	Kon = "kontroller"
 )
 

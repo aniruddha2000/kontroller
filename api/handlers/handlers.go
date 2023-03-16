@@ -27,8 +27,9 @@ func NewHandler() *Handler {
 	}
 }
 
+// PodValidationHandler is the handler for pod validation.
 func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
-	pod, admissionReview, err := h.getPodObjectFromAdmissionReviewRequest(w, r)
+	pod, admissionReview, err := h.getPodObjectFromAdmissionReviewRequest(r)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
 	}
@@ -67,20 +68,20 @@ func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
 func validatePodObjectMeta(objectMeta metav1.ObjectMeta) bool {
 	if objectMeta.Annotations == nil {
 		return false
-	} else {
-		annotation, ok := objectMeta.Annotations["validated-by"]
-		if !ok {
-			return false
-		} else if annotation == "custom webhook" {
-			return true
-		} else {
-			return false
-		}
 	}
+	annotation, ok := objectMeta.Annotations["validated-by"]
+	if !ok {
+		return false
+	}
+	if annotation == "custom webhook" {
+		return true
+	}
+	return false
 }
 
+// PodMutationHandler is the handler for pod mutation.
 func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
-	pod, admissionReview, err := h.getPodObjectFromAdmissionReviewRequest(w, r)
+	pod, admissionReview, err := h.getPodObjectFromAdmissionReviewRequest(r)
 	if err != nil {
 		responsewriters.InternalError(w, r, err)
 	}
@@ -128,7 +129,7 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) getPodObjectFromAdmissionReviewRequest(w http.ResponseWriter, r *http.Request) (v1.Pod, admv1beta1.AdmissionReview, error) {
+func (h *Handler) getPodObjectFromAdmissionReviewRequest(r *http.Request) (v1.Pod, admv1beta1.AdmissionReview, error) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return v1.Pod{}, admv1beta1.AdmissionReview{}, err
