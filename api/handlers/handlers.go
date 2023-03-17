@@ -42,7 +42,7 @@ func (h *Handler) PodValidationHandler(w http.ResponseWriter, r *http.Request) {
 			Allowed: allow,
 			Result: &metav1.Status{
 				Status:  "Failure",
-				Message: fmt.Sprintf("Pod metadata: %s has no desired annotation in it %s:%s", pod.ObjectMeta.Annotations, "validated-by", "custom webhook"),
+				Message: fmt.Sprintf("Pod metadata: has no desired annotation in it %s:%s", "validated-by", "custom webhook"),
 				Reason:  metav1.StatusReasonInvalid,
 			},
 		}
