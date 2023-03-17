@@ -86,6 +86,8 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 		responsewriters.InternalError(w, r, err)
 	}
 
+	var patchRes []byte
+
 	newPod := pod.DeepCopy()
 	allow := validatePodObjectMeta(newPod.ObjectMeta)
 	if !allow {
@@ -93,21 +95,21 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 			newPod.ObjectMeta.Annotations = make(map[string]string)
 		}
 		newPod.ObjectMeta.Annotations["validated-by"] = "custom webhook"
-	}
 
-	res, err := json.Marshal(newPod)
-	if err != nil {
-		responsewriters.InternalError(w, r, err)
-	}
+		newPodRaw, err := json.Marshal(newPod)
+		if err != nil {
+			responsewriters.InternalError(w, r, err)
+		}
 
-	patch, err := jsonpatch.CreatePatch(admissionReview.Request.Object.Raw, res)
-	if err != nil {
-		responsewriters.InternalError(w, r, err)
-	}
+		patch, err := jsonpatch.CreatePatch(admissionReview.Request.Object.Raw, newPodRaw)
+		if err != nil {
+			responsewriters.InternalError(w, r, err)
+		}
 
-	patchRes, err := json.Marshal(patch)
-	if err != nil {
-		responsewriters.InternalError(w, r, err)
+		patchRes, err = json.Marshal(patch)
+		if err != nil {
+			responsewriters.InternalError(w, r, err)
+		}
 	}
 
 	jsonPatchType := admv1beta1.PatchTypeJSONPatch

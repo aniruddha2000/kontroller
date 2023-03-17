@@ -16,6 +16,7 @@ require (
 require (
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/vladimirvivien/gexe v0.2.0 // indirect
 	sigs.k8s.io/controller-runtime v0.14.1 // indirect
 )
@@ -66,6 +67,7 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/cobra v1.6.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
+	github.com/stretchr/testify v1.8.2
 	go.etcd.io/etcd/api/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.5 // indirect
