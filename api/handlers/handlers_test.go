@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aniruddha2000/kontroller/api/handlers"
+	"github.com/mattbaird/jsonpatch"
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -91,30 +92,29 @@ func TestPodValidationHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			h := handlers.NewHandler()
 
-			jsonBytes, err := getAdmissionReviewObject(t, test.podRequestsObject, uid)
+			// Create request body
+			jsonBytes, admissionReview, err := getAdmissionReviewObject(t, test.podRequestsObject, uid)
 			if err != nil {
 				t.Error(err)
 			}
 
+			// Make requests
 			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(jsonBytes))
 			w := httptest.NewRecorder()
-
 			h.PodValidationHandler(w, r)
 
+			// Read response
 			got, err := io.ReadAll(w.Body)
 			if err != nil {
 				t.Error(err)
 			}
 
-			responseAdmissionReview := admv1beta1.AdmissionReview{}
-			err = json.Unmarshal(got, &responseAdmissionReview)
+			err = json.Unmarshal(got, admissionReview)
 			if err != nil {
 				t.Error(err)
 			}
 
-			if !assert.Equal(t, test.response, responseAdmissionReview.Response) {
-				t.Fatalf("Want %v, got %v", test.response, responseAdmissionReview.Response)
-			}
+			assert.Equalf(t, test.response, admissionReview.Response, "Want %v, got %v", test.response, admissionReview.Response)
 		})
 	}
 }
@@ -129,7 +129,7 @@ func TestPodMutationHandler(t *testing.T) {
 		response          *admv1beta1.AdmissionResponse
 	}{
 		{
-			name: "succesfull pod validation requests",
+			name: "succesfull pod mutation requests",
 			podRequestsObject: corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "webserver",
@@ -158,49 +158,112 @@ func TestPodMutationHandler(t *testing.T) {
 				Patch:     nil,
 			},
 		},
+		{
+			name: "unsuccesfull pod mutation requests",
+			podRequestsObject: corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "webserver",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "webserver",
+							Image: "ngnix:latest",
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 80,
+								},
+							},
+						},
+					},
+				},
+			},
+			response: &admv1beta1.AdmissionResponse{
+				UID:       uid,
+				Allowed:   true,
+				PatchType: &jsonPatchType,
+				Patch:     nil,
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			h := handlers.NewHandler()
 
-			jsonBytes, err := getAdmissionReviewObject(t, test.podRequestsObject, uid)
+			// Create request body
+			jsonBytes, admissionReview, err := getAdmissionReviewObject(t, test.podRequestsObject, uid)
 			if err != nil {
 				t.Error(err)
 			}
 
+			// Create patch only if annotations not found
+			if test.podRequestsObject.Annotations == nil || test.podRequestsObject.Annotations["validated-by"] != "custom webhook" {
+				test.response.Patch, err = createJSONPatch(t, admissionReview.Request, test.podRequestsObject)
+				if err != nil {
+					t.Error(err)
+				}
+			}
+
+			// Make request
 			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(jsonBytes))
 			w := httptest.NewRecorder()
-
 			h.PodMutationHandler(w, r)
 
+			// Read response
 			got, err := io.ReadAll(w.Body)
 			if err != nil {
 				t.Error(err)
 			}
 
-			responseAdmissionReview := admv1beta1.AdmissionReview{}
-			err = json.Unmarshal(got, &responseAdmissionReview)
+			err = json.Unmarshal(got, admissionReview)
 			if err != nil {
 				t.Error(err)
 			}
 
-			if !assert.Equal(t, test.response, responseAdmissionReview.Response) {
-				t.Fatalf("Want %v, got %v", test.response, responseAdmissionReview.Response)
+			if !assert.Equal(t, test.response, admissionReview.Response) {
+				t.Fatalf("Want %v, got %v", test.response.Patch, admissionReview.Response.Patch)
 			}
 		})
 	}
 }
 
-func getAdmissionReviewObject(t *testing.T, pod corev1.Pod, uid types.UID) ([]byte, error) {
+func createJSONPatch(t *testing.T, adm *admv1beta1.AdmissionRequest, pod corev1.Pod) ([]byte, error) {
 	t.Helper()
 
-	jsonBytes, err := json.Marshal(pod)
+	newPod := pod.DeepCopy()
+	if newPod.Annotations == nil {
+		newPod.Annotations = make(map[string]string)
+	}
+	newPod.Annotations["validated-by"] = "custom webhook"
+
+	newPodRaw, err := json.Marshal(newPod)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	admissionReview := admv1beta1.AdmissionReview{
+	jsonPatch, err := jsonpatch.CreatePatch(adm.Object.Raw, newPodRaw)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	patch, err := json.Marshal(jsonPatch)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return patch, nil
+}
+
+func getAdmissionReviewObject(t *testing.T, pod corev1.Pod, uid types.UID) ([]byte, *admv1beta1.AdmissionReview, error) {
+	t.Helper()
+
+	jsonBytes, err := json.Marshal(pod)
+	if err != nil {
+		return []byte{}, &admv1beta1.AdmissionReview{}, err
+	}
+
+	admissionReview := &admv1beta1.AdmissionReview{
 		Request: &admv1beta1.AdmissionRequest{
 			UID: uid,
 			Object: runtime.RawExtension{
@@ -211,8 +274,8 @@ func getAdmissionReviewObject(t *testing.T, pod corev1.Pod, uid types.UID) ([]by
 
 	jsonBytes, err = json.Marshal(admissionReview)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, &admv1beta1.AdmissionReview{}, err
 	}
 
-	return jsonBytes, nil
+	return jsonBytes, admissionReview, nil
 }

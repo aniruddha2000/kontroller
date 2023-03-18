@@ -86,7 +86,7 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 		responsewriters.InternalError(w, r, err)
 	}
 
-	var patchRes []byte
+	patchRes := []byte{}
 
 	newPod := pod.DeepCopy()
 	allow := validatePodObjectMeta(newPod.ObjectMeta)
@@ -110,7 +110,11 @@ func (h *Handler) PodMutationHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			responsewriters.InternalError(w, r, err)
 		}
+		// log.Println("Inside allow")
+		// log.Println(patchRes)
 	}
+	// log.Println("outside allow")
+	// log.Println(patchRes)
 
 	jsonPatchType := admv1beta1.PatchTypeJSONPatch
 	admissionReview.Response = &admv1beta1.AdmissionResponse{
